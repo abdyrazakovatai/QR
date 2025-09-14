@@ -49,7 +49,7 @@ def track(qr_id):
 # ---------------- ЗАПУСК ----------------
 if __name__ == "__main__":
     # Укажи здесь свой сервер, например Render: https://myapp.onrender.com
-    BASE_URL = "https://.com"
+    BASE_URL = "https://qrcode.fly.dev"
 
     # Генерируем QR-коды
     generate_qrs(BASE_URL)
