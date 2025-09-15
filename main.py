@@ -39,14 +39,26 @@ QR_COUNT = 7  # количество QR-кодов
 REDIRECT_URL = "https://impatika.com"  # куда будут попадать пользователи после сканирования
 
 # ---------------- ИНИЦИАЛИЗАЦИЯ СЧЁТЧИКОВ ----------------
-# Если файла со статистикой нет — создаём 7 счётчиков
+os.makedirs(os.path.dirname(STATS_FILE), exist_ok=True)
+
+counters = {f"qr{i}": 0 for i in range(1, QR_COUNT + 1)}  # дефолт
+
 if os.path.exists(STATS_FILE):
-    with open(STATS_FILE, "r") as f:
-        counters = json.load(f)
+    try:
+        with open(STATS_FILE, "r") as f:
+            data = f.read().strip()
+            if data:  # если файл не пустой
+                counters = json.loads(data)
+            else:
+                print("⚠️ Файл пустой, используем дефолтные счётчики")
+    except json.JSONDecodeError:
+        print("⚠️ JSON повреждён, пересоздаём счётчики")
+        counters = {f"qr{i}": 0 for i in range(1, QR_COUNT + 1)}
+        with open(STATS_FILE, "w") as f:
+            json.dump(counters, f)
 else:
-    counters = {f"qr{i}": 0 for i in range(1, QR_COUNT + 1)}
-
-
+    with open(STATS_FILE, "w") as f:
+        json.dump(counters, f)
 # ---------------- ФУНКЦИИ ----------------
 def save_counters():
     """Сохраняем статистику в файл"""
