@@ -3,13 +3,38 @@ import qrcode
 import json
 import os
 import threading
+import time
+import requests
 
 lock = threading.Lock()
 
 app = Flask(__name__)
 
+PING_INTERVAL = 5 * 60  # 5 минут
+
+
+def ping_self():
+    while True:
+        try:
+            # Делает GET-запрос на сервер
+            requests.get("https://your-server-url.com/ping")
+        except Exception as e:
+            print("Ping failed:", e)
+        time.sleep(PING_INTERVAL)
+
+
+# Запуск фонового потока
+threading.Thread(target=ping_self, daemon=True).start()
+
+
+# Роут для «пинга»
+@app.route("/ping")
+def ping():
+    return "OK"
+
+
 # ---------------- НАСТРОЙКИ ----------------
-STATS_FILE = "db.json"  # файл для хранения статистики
+STATS_FILE = "db/db.json"  # файл для хранения статистики
 QR_COUNT = 7  # количество QR-кодов
 REDIRECT_URL = "https://impatika.com"  # куда будут попадать пользователи после сканирования
 
@@ -47,8 +72,8 @@ def generate_qrs(base_url):
 def track(qr_id):
     if qr_id in counters:
         with lock:
-          counters[qr_id] += 1  # увеличиваем счётчик конкретного QR
-          save_counters()  # сохраняем статистику
+            counters[qr_id] += 1  # увеличиваем счётчик конкретного QR
+            save_counters()  # сохраняем статистику
         print(f"{qr_id} → {counters[qr_id]} переходов")
         return redirect(REDIRECT_URL)  # редирект на сайт
     return "Неверный QR", 404
@@ -58,9 +83,7 @@ def track(qr_id):
 if __name__ == "__main__":
     # Укажи здесь свой сервер, например Render: https://myapp.onrender.com
     BASE_URL = "https://qrcode.fly.dev"
-
-    # Генерируем QR-коды
     generate_qrs(BASE_URL)
-
-    # Запускаем сервер Flask
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    os.makedirs(os.path.dirname(STATS_FILE), exist_ok=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
