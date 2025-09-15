@@ -82,7 +82,7 @@ def track(qr_id):
 # ---------------- ЗАПУСК ----------------
 if __name__ == "__main__":
     # Укажи здесь свой сервер, например Render: https://myapp.onrender.com
-    BASE_URL = "https://qrcode.fly.dev"
+    BASE_URL = "https://qr-oolj.onrender.com"
     generate_qrs(BASE_URL)
     os.makedirs(os.path.dirname(STATS_FILE), exist_ok=True)
     port = int(os.environ.get("PORT", 5000))
