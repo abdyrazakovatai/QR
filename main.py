@@ -17,7 +17,7 @@ def ping_self():
     while True:
         try:
             # Делает GET-запрос на сервер
-            requests.get("https://https://qr-oolj.onrender.com")
+            requests.get("https://qr-oolj.onrender.com")
         except Exception as e:
             print("Ping failed:", e)
         time.sleep(PING_INTERVAL)
