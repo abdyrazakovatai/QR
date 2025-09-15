@@ -2,12 +2,15 @@ from flask import Flask, redirect
 import qrcode
 import json
 import os
+import threading
+
+lock = threading.Lock()
 
 app = Flask(__name__)
 
 # ---------------- НАСТРОЙКИ ----------------
-STATS_FILE = "stats.json"  # файл для хранения статистики
-QR_COUNT = 7               # количество QR-кодов
+STATS_FILE = "db.json"  # файл для хранения статистики
+QR_COUNT = 7  # количество QR-кодов
 REDIRECT_URL = "https://impatika.com"  # куда будут попадать пользователи после сканирования
 
 # ---------------- ИНИЦИАЛИЗАЦИЯ СЧЁТЧИКОВ ----------------
@@ -18,11 +21,13 @@ if os.path.exists(STATS_FILE):
 else:
     counters = {f"qr{i}": 0 for i in range(1, QR_COUNT + 1)}
 
+
 # ---------------- ФУНКЦИИ ----------------
 def save_counters():
     """Сохраняем статистику в файл"""
     with open(STATS_FILE, "w") as f:
         json.dump(counters, f)
+
 
 def generate_qrs(base_url):
     """
@@ -36,15 +41,18 @@ def generate_qrs(base_url):
         img.save(f"{qr_id}.png")
         print(f"Создан {qr_id}: {url}")
 
+
 # ---------------- РОУТ ДЛЯ СЧЁТЧИКА ----------------
 @app.route("/<qr_id>")
 def track(qr_id):
     if qr_id in counters:
-        counters[qr_id] += 1         # увеличиваем счётчик конкретного QR
-        save_counters()              # сохраняем статистику
+        with lock:
+          counters[qr_id] += 1  # увеличиваем счётчик конкретного QR
+          save_counters()  # сохраняем статистику
         print(f"{qr_id} → {counters[qr_id]} переходов")
         return redirect(REDIRECT_URL)  # редирект на сайт
     return "Неверный QR", 404
+
 
 # ---------------- ЗАПУСК ----------------
 if __name__ == "__main__":
